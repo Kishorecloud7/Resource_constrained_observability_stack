@@ -1,0 +1,46 @@
+version: "3.9"
+
+services:
+  sensor-service:
+    build:
+      context: ./sensor-service
+    container_name: sensor-service
+    ports:
+      - "8000:8000"
+    environment:
+      - PYTHONUNBUFFERED=1
+    deploy:
+      resources:
+        limits:
+          cpus: "0.50"
+          memory: "120M"
+    networks:
+      - monitoring
+
+  victoria-metrics:
+    image: victoriametrics/victoria-metrics:v1.103.0
+    container_name: victoria-metrics
+    ports:
+      - "8428:8428"   # VM UI + metrics ingestion API
+    volumes:
+      - ./monitoring/victoriametrics.yml:/etc/vmagent/config.yml
+      - vmdata:/storage
+    command:
+      - "--promscrape.config=/etc/vmagent/config.yml"
+      - "--storageDataPath=/storage"
+      - "--maxConcurrentInserts=4"
+      - "--memory.allowedPercent=35"   # Keeps VM within ~80MB
+    deploy:
+      resources:
+        limits:
+          cpus: "0.30"
+          memory: "80M"
+    networks:
+      - monitoring
+
+networks:
+  monitoring:
+    driver: bridge
+
+volumes:
+  vmdata:
