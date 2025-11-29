@@ -1,0 +1,10 @@
+global:
+  scrape_interval: 30s      # Reduced scrape rate to save memory & CPU
+  scrape_timeout: 10s
+
+scrape_configs:
+  - job_name: "sensor-service"
+    honor_labels: true
+    static_configs:
+      - targets:
+          - "sensor-service:8000"
