@@ -1,0 +1,21 @@
+flowchart LR
+
+    subgraph Dev["Developer"]
+        U[Uses VM UI to view metrics]
+    end
+
+    subgraph VM["VictoriaMetrics\n(Single Node)"]
+        UI["/graph UI (Port 8428)"]
+        Scrape["Scraper pulls metrics\nfrom sensor-service"]
+    end
+
+    subgraph APP["Sensor Service\n(Flask + Prometheus Client)"]
+        Root["/ → sensor value"]
+        Metrics["/metrics → custom metrics"]
+    end
+
+    U --> UI
+    Scrape --> Metrics
+    APP --> Scrape
+
+    Root --> APP
