@@ -1,46 +1,38 @@
 # Resource_constrained_observability_stackdevops-assignment/
 
 ```
+devops-assignment/
+│
 ├── README.md
 ├── PERFORMANCE_REPORT.md
-├── WALKTHROUGH.md               # (Optional: notes for your video script)
 │
 ├── sensor-service/
 │   ├── sensor.py
 │   ├── requirements.txt
 │   ├── Dockerfile
-│   ├── configs/
-│   │   └── logging.conf
-│   └── tests/
-│       ├── test_metrics.py
-│       └── test_healthcheck.py
+│   └── configs/
+│       └── logging.conf
 │
 ├── monitoring/
-│   ├── prometheus/
-│   │   ├── prometheus.yml
-│   ├── victoria-metrics/
-│   │   ├── vm-single-config.yaml   # (if using VictoriaMetrics)
-│   ├── grafana/
-│   │   ├── dashboards/
-│   │   │   └── sensor-dashboard.json
-│   │   └── provisioning/
-│   │       ├── dashboards/
-│   │       └── datasources/
-│   │           └── datasource.yml
+│   └── victoriametrics.yml
 │
-├── docker-compose.yml
+├── tests/
+│   ├── test_healthcheck.py
+│   └── test_metrics.py
 │
 ├── scripts/
-│   ├── profile_cpu.sh              # py-spy, cpu flamegraph
-│   ├── load_test.sh                # ab/hey test scripts
-│   └── debug_metrics.sh            # curl metrics health check
+│   ├── profile_cpu.sh
+│   ├── load_test.sh
+│   └── debug_metrics.sh
 │
 ├── diagrams/
 │   ├── architecture.png
 │   └── pipeline-flow.png
 │
-└── .github/
-    └── workflows/
-        ├── ci.yml                  # Lint, tests, build image
-        └── security.yml            # Basic static checks
+├── .github/
+│   └── workflows/
+│       ├── ci.yml
+│       └── security.yml
+│
+└── docker-compose.yml
 ```
