@@ -1,89 +1,121 @@
-import time
-import threading
 import random
+import time
+import logging
 from collections import deque
-
-from prometheus_client import (
-    start_http_server,
-    Counter,
-    Gauge,
-    Histogram
-)
-import psutil
 from flask import Flask, jsonify
 
+from prometheus_client import (
+    Counter,
+    Gauge,
+    Histogram,
+    generate_latest,
+    CONTENT_TYPE_LATEST,
+)
+
+# --------------------------------------------------
+# Logging Setup
+# --------------------------------------------------
+logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
+logger = logging.getLogger("sensor-service")
+
+# --------------------------------------------------
+# Flask App
+# --------------------------------------------------
 app = Flask(__name__)
 
-# -------------------------
-# Metrics
-# -------------------------
-REQUESTS = Counter("sensor_requests_total", "Total sensor requests")
-FAILURES = Counter("sensor_failed_total", "Total failed requests")
-QUEUE_DEPTH = Gauge("sensor_queue_depth", "Current buffer depth")
+# --------------------------------------------------
+# Custom Metrics
+# --------------------------------------------------
+REQUEST_COUNT = Counter(
+    "sensor_requests_total",
+    "Total number of requests received"
+)
+
+REQUEST_FAILURES = Counter(
+    "sensor_failed_total",
+    "Total number of failed requests"
+)
+
+QUEUE_DEPTH = Gauge(
+    "sensor_queue_depth",
+    "Simulated sensor processing queue depth"
+)
 
 CPU_SPIKE_DURATION = Histogram(
     "sensor_cpu_spike_seconds",
-    "Duration of CPU spikes in seconds",
-    buckets=[0.1, 0.5, 1, 2, 5, 10]
+    "Duration of CPU spike simulation"
 )
 
-# Bounded buffer to prevent memory spikes
-buffer = deque(maxlen=500)
+# --------------------------------------------------
+# Internal State for Performance Simulation
+# --------------------------------------------------
+# bounded queue for lightweight memory behavior
+processing_queue = deque(maxlen=500)
 
-# -------------------------
-# CPU Spike Monitor (Background Thread)
-# -------------------------
-def cpu_spike_monitor():
-    last_high = None
-    while True:
-        cpu = psutil.cpu_percent(interval=0.5)
 
-        # Detect spike start
-        if cpu > 60:
-            if last_high is None:
-                last_high = time.time()
+# --------------------------------------------------
+# CPU Spike Logic (Bounded)
+# --------------------------------------------------
+def simulate_cpu_spike():
+    """Simulates a bounded CPU spike and records its duration."""
+    start_time = time.time()
+    spike_duration = 0.15  # 150ms predictable spike
 
-        # Spike ended → record duration
-        else:
-            if last_high:
-                duration = time.time() - last_high
-                CPU_SPIKE_DURATION.observe(duration)
-                last_high = None
+    while time.time() - start_time < spike_duration:
+        pass  # controlled CPU burn
 
-        time.sleep(0.2)
+    CPU_SPIKE_DURATION.observe(time.time() - start_time)
 
-# -------------------------
-# Metrics Server (Runs independently)
-# -------------------------
-def metrics_server():
-    start_http_server(8001)
-    print("Metrics available at http://localhost:8001/metrics")
 
-# -------------------------
-# Main API Endpoint
-# -------------------------
-@app.get("/")
-def root():
+# --------------------------------------------------
+# Sensor Value Generator
+# --------------------------------------------------
+def generate_sensor_value():
+    """Returns a synthetic sensor reading."""
+    # Increase queue depth randomly (simulate load)
+    current_depth = random.randint(0, 40)
+    QUEUE_DEPTH.set(current_depth)
+
+    # Add a lightweight entry to the internal bounded queue
+    processing_queue.append(current_depth)
+
+    # Introduce occasional CPU spikes
+    if random.random() < 0.15:   # 15% chance
+        simulate_cpu_spike()
+
+    # Produce a sensor reading
+    return round(random.uniform(20.0, 80.0), 2)
+
+
+# --------------------------------------------------
+# API Routes
+# --------------------------------------------------
+@app.route("/")
+def get_sensor_value():
+    """Main API returning sensor data."""
+    REQUEST_COUNT.inc()
+
     try:
-        REQUESTS.inc()
+        value = generate_sensor_value()
+        response = {"value": value}
+        logger.info(f"Sensor reading returned: {value}")
+        return jsonify(response), 200
 
-        # Simulated sensor reading
-        value = random.random()
+    except Exception as e:
+        REQUEST_FAILURES.inc()
+        logger.error(f"Error while generating sensor value: {str(e)}")
+        return jsonify({"error": "Sensor failure"}), 500
 
-        buffer.append(value)
-        QUEUE_DEPTH.set(len(buffer))
 
-        return jsonify({"value": value})
+@app.route("/metrics")
+def metrics():
+    """Prometheus metrics endpoint."""
+    return generate_latest(), 200, {"Content-Type": CONTENT_TYPE_LATEST}
 
-    except Exception:
-        FAILURES.inc()
-        return jsonify({"error": "internal failure"}), 500
 
-# -------------------------
-# Application Entry Point
-# -------------------------
+# --------------------------------------------------
+# Main Entrypoint
+# --------------------------------------------------
 if __name__ == "__main__":
-    threading.Thread(target=cpu_spike_monitor, daemon=True).start()
-    threading.Thread(target=metrics_server, daemon=True).start()
-
+    logger.info("Starting Sensor Service on port 8000...")
     app.run(host="0.0.0.0", port=8000)
