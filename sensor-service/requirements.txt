@@ -1,3 +1,5 @@
 flask==3.0.0
 prometheus-client==0.20.0
 gunicorn==21.2.0
+gevent>=23.0.0
+greenlet
