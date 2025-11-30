@@ -1,0 +1,25 @@
+flowchart TB
+
+    A["Developer Pushes Code<br/>(GitHub Repository)"] --> B["GitHub Actions CI Pipeline"]
+
+    subgraph CI["CI Pipeline (GitHub Actions)"]
+        B1["Run Lint Checks"]
+        B2["Run Tests (pytest)"]
+        B3["Build Docker Image"]
+        B4["Security Scan"]
+    end
+
+    B --> B1 --> B2 --> B3 --> B4 --> C["Push Image to Local Environment / Registry"]
+
+    C --> D["docker-compose up<br/>(Local Deployment)"]
+
+    subgraph Stack["Local Monitoring Stack"]
+        S1["Sensor Service (Flask)"]
+        S2["VictoriaMetrics<br/>(Single Node)"]
+    end
+
+    D --> S1
+    D --> S2
+
+    S1 -->|"Exposes /metrics"| S2
+    S2 -->|"Visualize Metrics<br/>/graph UI"| E["Developer Observes Metrics"]
