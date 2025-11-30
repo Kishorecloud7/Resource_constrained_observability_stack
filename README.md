@@ -1,4 +1,3 @@
-# Resource_constrained_observability_stackdevops-assignment/
 
 # DevOps Performance Optimization Challenge  
 Optimized Python Sensor Service • VictoriaMetrics Monitoring • CI/CD Pipeline
@@ -65,6 +64,7 @@ devops-assignment/
 │
 └── docker-compose.yml
 
+
 ```
 
 ## 📌 3. How to Run Locally (One Command)
@@ -73,9 +73,9 @@ Ensure Docker & Docker Compose are installed.
 
 Then run:
 
-```bash
-docker-compose up --build
 
+docker-compose up --build
+```
 
 This starts:
 
@@ -86,29 +86,33 @@ victoria-metrics → Lightweight metrics DB (8428)
 (Optional) Grafana can be added if needed
 
 📌 4. Application Endpoints
-Endpoint	Description
-/	Health check
-/metrics	Prometheus/VictoriaMetrics-compatible metrics
-/debug	Prints internal buffers (debug only)
+    Endpoint	        Description
+  /	                    Health check
+/metrics	            Prometheus/VictoriaMetrics-compatible metrics
+/debug	                Prints internal buffers (debug only)
 
 To test:
 
+```
 curl http://localhost:8000/
 curl http://localhost:8000/metrics
+```
 
 📌 5. Monitoring (VictoriaMetrics)
 
 VictoriaMetrics UI →
 
+```
 http://localhost:8428
-
+```
 
 Example query for custom metric:
 
 rate(sensor_cpu_spike_seconds_bucket[5m])
 
 📌 6. Custom Metrics Implemented
-sensor_cpu_spike_seconds
+
+ **sensor_cpu_spike_seconds** 
 
 Histogram metric that records CPU spike durations
 
@@ -116,22 +120,23 @@ Helps identify long-running CPU-intensive operations
 
 Ideal for alerting & performance regressions
 
-sensor_queue_depth
+**sensor_queue_depth**
 
 Tracks in-memory buffer depth using deque
 
 Helps detect backlog buildup
 
-sensor_loop_iterations_total
+**sensor_loop_iterations_total**
 
 Counter for background loop processing
 
 📌 7. Performance Improvements (Before vs After)
-Component	Before	After
-Sensor Service	140 MB	65 MB
-Monitoring Backend	120 MB	80 MB
-Grafana (optional)	100 MB	55 MB
-Total	360 MB	200 MB
+|    Component	       | Before	      |  After  |
+|----------------------|--------------|---------|
+|Sensor Service	       | 140 MB	      |  65 MB  |
+|Monitoring Backend	   | 120 MB	      |  80 MB  |
+|Grafana (optional)	   | 100 MB	      |  55 MB  |
+|Total	               | 360 MB	      | 200 MB  |
 Key Fixes:
 
 Replaced unbounded lists → deque(maxlen=500)
@@ -162,20 +167,26 @@ CI runs on every push & PR:
 
 Workflow files:
 
+```
 .github/workflows/ci.yml
 .github/workflows/security.yml
+```
 
 
 CI starts the service using GitHub Actions Services so tests directly hit:
 
+```
 http://localhost:8000/
 http://localhost:8000/metrics
+```
 
 📌 9. Testing
 
 Run tests locally:
 
+```
 pytest -v
+```
 
 
 Included tests:
@@ -185,48 +196,16 @@ test_healthcheck.py → ensures / returns 200
 test_metrics.py → checks /metrics contains custom metrics
 
 📌 10. Scripts (Developer Tools)
-Script	Purpose
-profile_cpu.sh	CPU flamegraph / profiling
-load_test.sh	Load testing using hey
-debug_metrics.sh	Prints raw VM metrics for debugging
+        Script	                Purpose
+profile_cpu.sh	                CPU flamegraph / profiling
+load_test.sh	                Load testing using hey
+debug_metrics.sh	            Prints raw VM metrics for debugging
 
 Example:
 
+```
 ./scripts/load_test.sh
-
-📌 11. Architecture Diagram
-
-Located in:
-
-diagrams/architecture.png
-
-
-It shows:
-
-Developer workflow
-
-CI → Build → Tests
-
-docker-compose deployment
-
-VictoriaMetrics scraping sensor-service
-
-📌 12. Pipeline Flow Diagram
-
-Located in:
-
-diagrams/pipeline-flow.png
-
-
-It visualizes:
-
-GitHub Actions CI
-
-Docker image build
-
-Local deployment
-
-Metrics flow from sensor → VM → UI
+```
 
 📌 13. Requirements
 
@@ -237,7 +216,10 @@ Docker Compose
 Python 3.11 (optional, only if running manually)
 
 📌 14. How to Stop the Stack
+
+```
 docker-compose down
+```
 
 📌 15. Conclusion
 
