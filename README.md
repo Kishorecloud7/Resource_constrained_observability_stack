@@ -137,6 +137,7 @@ Counter for background loop processing
 |Monitoring Backend	   | 120 MB	      |  80 MB  |
 |Grafana (optional)	   | 100 MB	      |  55 MB  |
 |Total	               | 360 MB	      | 200 MB  |
+
 Key Fixes:
 
 Replaced unbounded lists → deque(maxlen=500)
