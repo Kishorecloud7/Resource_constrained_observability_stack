@@ -34,4 +34,5 @@ COPY configs/ configs/
 EXPOSE 8000
 
 # Start the service using Gunicorn (production-grade)
-CMD ["gunicorn", "--bind", "0.0.0.0:8000", "sensor:app"]
+CMD ["gunicorn", "sensor:app", "-b", "0.0.0.0:8000", "-w", "2", "-k", "gevent", "--timeout", "30"]
+
