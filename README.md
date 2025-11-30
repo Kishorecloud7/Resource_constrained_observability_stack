@@ -73,7 +73,7 @@ Ensure Docker & Docker Compose are installed.
 
 Then run:
 
-
+```
 docker-compose up --build
 ```
 
